@@ -5,7 +5,7 @@ import * as deepmerge from 'deepmerge';
 import { OAuthGrantType, OAuthRequestPayload, OAuthResponse } from './amocrm.interface';
 
 // TODO: Remove all these constants to .env
-const AMO_ULI = 'https://alexmyt1.amocrm.ru';
+const AMO_URI = 'https://alexmyt1.amocrm.ru';
 const REDIRECT_URI = 'https://ff76-83-239-184-102.ngrok-free.app/auth/redirect';
 const CLIENT_SECRET = 'QlEYDvhWyDbrFizHvgAopZcEfJLaC91msDXrnA6JppTOe0zspoEViUWrbYObul1I';
 
@@ -20,7 +20,7 @@ export class AmoCRMService {
   /** Authorized request to AMOCRM API */
   public async request<T = unknown>(options: HttpModuleOptions): Promise<T> {
     const defaultOptions: HttpModuleOptions = {
-      baseURL: AMO_ULI,
+      baseURL: AMO_URI,
       headers: { Authorization: `Bearer ${this.access_token}` },
     };
 
@@ -75,7 +75,7 @@ export class AmoCRMService {
     const result = await this.httpService.axiosRef.post<OAuthResponse>(
       `/oauth2/access_token`,
       payload,
-      { baseURL: AMO_ULI },
+      { baseURL: AMO_URI },
     );
 
     this.access_token = result.data.access_token;
