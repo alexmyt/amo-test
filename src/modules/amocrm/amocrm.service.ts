@@ -1,13 +1,9 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { HttpService, HttpModuleOptions } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import * as deepmerge from 'deepmerge';
 
 import { OAuthGrantType, OAuthRequestPayload, OAuthResponse } from './amocrm.interface';
-
-// TODO: Remove all these constants to .env
-const AMO_URI = 'https://alexmyt1.amocrm.ru';
-const REDIRECT_URI = 'https://regular-poodle-model.ngrok-free.app/auth/redirect';
-const CLIENT_SECRET = 'QlEYDvhWyDbrFizHvgAopZcEfJLaC91msDXrnA6JppTOe0zspoEViUWrbYObul1I';
 
 @Injectable()
 export class AmoCRMService {
@@ -15,12 +11,25 @@ export class AmoCRMService {
   private refresh_token: string;
   private expires_at: number;
 
-  constructor(private readonly httpService: HttpService) {}
+  private redirectUri: string;
+  private apiUri: string;
+  private integrationId: string;
+  private integrationSecret: string;
+
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
+  ) {
+    this.redirectUri = `${this.configService.get<string>('APP_URI')}/auth/redirect`;
+    this.apiUri = this.configService.get<string>('AMO_URI');
+    this.integrationId = this.configService.get<string>('INTEGRATION_ID');
+    this.integrationSecret = this.configService.get<string>('INTEGRATION_SECRET');
+  }
 
   /** Authorized request to AMOCRM API */
   public async request<T = unknown>(options: HttpModuleOptions): Promise<T> {
     const defaultOptions: HttpModuleOptions = {
-      baseURL: AMO_URI,
+      baseURL: this.apiUri,
       headers: { Authorization: `Bearer ${this.access_token}` },
     };
 
@@ -44,38 +53,38 @@ export class AmoCRMService {
   }
 
   /** Get access token by authorization code  */
-  public async accessTokenByCode(client_id: string, code: string): Promise<OAuthResponse> {
+  public async accessTokenByCode(code: string): Promise<OAuthResponse> {
     const grants: OAuthGrantType = {
       grant_type: 'authorization_code',
       code,
     };
 
-    return await this.accessToken(client_id, grants);
+    return await this.accessToken(grants);
   }
 
   /** Get access token by refresh token */
-  public async accessTokenByRefreshToken(client_id: string): Promise<OAuthResponse> {
+  public async accessTokenByRefreshToken(): Promise<OAuthResponse> {
     const grants: OAuthGrantType = {
       grant_type: 'refresh_token',
       refresh_token: this.refresh_token,
     };
 
-    return await this.accessToken(client_id, grants);
+    return await this.accessToken(grants);
   }
 
   /** Get access token by grant type (authorization_code or refresh_token) */
-  private async accessToken(client_id: string, grants: OAuthGrantType): Promise<OAuthResponse> {
+  private async accessToken(grants: OAuthGrantType): Promise<OAuthResponse> {
     const payload: OAuthRequestPayload = {
-      client_id,
-      redirect_uri: REDIRECT_URI,
-      client_secret: CLIENT_SECRET,
+      client_id: this.integrationId,
+      redirect_uri: this.redirectUri,
+      client_secret: this.integrationSecret,
       ...grants,
     };
 
     const result = await this.httpService.axiosRef.post<OAuthResponse>(
       `/oauth2/access_token`,
       payload,
-      { baseURL: AMO_URI },
+      { baseURL: this.apiUri },
     );
 
     this.access_token = result.data.access_token;
