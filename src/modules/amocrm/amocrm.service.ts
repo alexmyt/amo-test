@@ -6,7 +6,7 @@ import { OAuthGrantType, OAuthRequestPayload, OAuthResponse } from './amocrm.int
 
 // TODO: Remove all these constants to .env
 const AMO_URI = 'https://alexmyt1.amocrm.ru';
-const REDIRECT_URI = 'https://ff76-83-239-184-102.ngrok-free.app/auth/redirect';
+const REDIRECT_URI = 'https://regular-poodle-model.ngrok-free.app/auth/redirect';
 const CLIENT_SECRET = 'QlEYDvhWyDbrFizHvgAopZcEfJLaC91msDXrnA6JppTOe0zspoEViUWrbYObul1I';
 
 @Injectable()
