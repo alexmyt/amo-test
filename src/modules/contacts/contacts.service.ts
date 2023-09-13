@@ -43,7 +43,7 @@ export class ContactsService {
     const result = await this.amocrmService.request<Contact>({
       method: 'PATCH',
       url: `/api/v4/contacts/${contactId}`,
-      data: [{ name: contact.name, custom_fields_values }],
+      data: { name: contact.name, custom_fields_values },
     });
 
     return result;
