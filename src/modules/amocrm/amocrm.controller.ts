@@ -10,4 +10,9 @@ export class AmoCRMController {
   public async redirect(@Query() { code }: RedirectRequestQuery) {
     return this.authService.accessTokenByCode(code);
   }
+
+  @Get('refresh')
+  public async refreshToken() {
+    return this.authService.accessTokenByRefreshToken();
+  }
 }

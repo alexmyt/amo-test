@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { HttpService, HttpModuleOptions } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import * as deepmerge from 'deepmerge';
@@ -28,6 +33,10 @@ export class AmoCRMService {
 
   /** Authorized request to AMOCRM API */
   public async request<T = unknown>(options: HttpModuleOptions): Promise<T> {
+    if (Date.now() >= this.expires_at) {
+      await this.accessTokenByRefreshToken();
+    }
+
     const defaultOptions: HttpModuleOptions = {
       baseURL: this.apiUri,
       headers: { Authorization: `Bearer ${this.access_token}` },
@@ -81,11 +90,12 @@ export class AmoCRMService {
       ...grants,
     };
 
-    const result = await this.httpService.axiosRef.post<OAuthResponse>(
-      `/oauth2/access_token`,
-      payload,
-      { baseURL: this.apiUri },
-    );
+    const result = await this.httpService.axiosRef
+      .post<OAuthResponse>(`/oauth2/access_token`, payload, { baseURL: this.apiUri })
+      .catch(error => {
+        const { message } = error;
+        throw new InternalServerErrorException(message);
+      });
 
     this.access_token = result.data.access_token;
     this.refresh_token = result.data.refresh_token;
