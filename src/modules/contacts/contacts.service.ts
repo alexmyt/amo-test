@@ -12,7 +12,7 @@ export class ContactsService {
 
   /** Main flow from Technical Specs */
   public async getAndUpdateAndMakeDeal(payload: Contact) {
-    let contact = await this.getOneByFilter(payload);
+    let contact = await this.getOneByQuery(payload);
 
     if (contact) {
       await this.updateOne(contact.id, payload);
@@ -49,7 +49,9 @@ export class ContactsService {
     return result;
   }
 
-  /** Get one contact by filters */
+  /** Get one contact by filters
+   *  Not working.
+   */
   public async getOneByFilter({ phone, email }: Contact): Promise<Contact | null> {
     const result = await this.amocrmService.request<ContactsResponse>({
       method: 'GET',
@@ -58,6 +60,22 @@ export class ContactsService {
     });
 
     return result._embedded.contacts[0];
+  }
+
+  /** Get one contact by query string
+   *  Return first founded contact with searching email or phone
+   */
+  public async getOneByQuery({ phone, email }: Contact): Promise<Contact | null> {
+    const result = await this.amocrmService.request<ContactsResponse>({
+      method: 'GET',
+      url: `/api/v4/contacts?query=${phone}&query=${email}`,
+    });
+
+    if (result) {
+      return result._embedded.contacts[0];
+    } else {
+      return null;
+    }
   }
 
   /** Prepare custom fields for contact */
