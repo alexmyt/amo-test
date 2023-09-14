@@ -16,7 +16,8 @@ steps:
       command_timeout: 3m
       script:
         - docker pull ghcr.io/alexmyt/amo-test:develop
-        - docker compose up --force-recreate -d node
+        - docker compose up --force-recreate -d amo-test
+        - docker compose up -d ngrok
         - docker image prune -f
 
 trigger:
